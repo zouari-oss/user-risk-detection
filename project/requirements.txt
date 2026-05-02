@@ -5,7 +5,8 @@ pandas
 matplotlib
 graphviz
 seaborn
+joblib
 
 # === Api pkgs ===
 fastapi[standard]
-joblib
+mangum
