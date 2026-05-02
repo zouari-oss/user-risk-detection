@@ -1,10 +1,10 @@
 # === Training pkgs ===
-# xgboost
-# scikit-learn
+xgboost
+scikit-learn
 pandas
-# matplotlib
-# graphviz
-# seaborn
+matplotlib
+graphviz
+seaborn
 
 # === Api pkgs ===
 fastapi[standard]
