@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+
+API_URL="http://127.0.0.1:8000/api/v1/predict"
+CSV_FILE="test.csv"
+
+declare -A cm
+
+# init confusion matrix
+for i in 0 1 2; do
+  for j in 0 1 2; do
+    cm["$i,$j"]=0
+  done
+done
+
+if [ ! -f "$CSV_FILE" ]; then
+  echo "ERROR: CSV file not found"
+  exit 1
+fi
+
+while IFS=, read -r session_duration is_revoked ip_change_count device_change_count location_change login_hour is_night_login os_variation risk_label; do
+
+  response=$(curl -s -X POST "$API_URL" \
+    -H "Content-Type: application/json" \
+    -d "{
+      \"session_duration\": $session_duration,
+      \"is_revoked\": $is_revoked,
+      \"ip_change_count\": $ip_change_count,
+      \"device_change_count\": $device_change_count,
+      \"location_change\": $location_change,
+      \"login_hour\": $login_hour,
+      \"is_night_login\": $is_night_login,
+      \"os_variation\": $os_variation
+    }")
+
+  # ==========================
+  # SAFE PARSING WITHOUT jq
+  # ==========================
+  pred=$(echo "$response" | grep -o '"risk_label"[ ]*:[ ]*[0-2]' | grep -o '[0-2]')
+
+  if [[ -z "$pred" ]]; then
+    echo "[WARN] Bad response: $response"
+    continue
+  fi
+
+  # update confusion matrix
+  cm["$risk_label,$pred"]=$((cm["$risk_label,$pred"] + 1))
+
+  echo "[DEBUG] actual=$risk_label pred=$pred"
+
+done < <(tail -n +2 "$CSV_FILE")
+
+# ==========================
+# CONFUSION MATRIX
+# ==========================
+echo ""
+echo "========================="
+echo "CONFUSION MATRIX (0/1/2)"
+echo "========================="
+
+for i in 0 1 2; do
+  echo -n "Actual $i -> "
+  for j in 0 1 2; do
+    echo -n "${cm["$i,$j"]} "
+  done
+  echo ""
+done
+
+# ==========================
+# ACCURACY
+# ==========================
+total=0
+correct=0
+
+for i in 0 1 2; do
+  for j in 0 1 2; do
+    val=${cm["$i,$j"]}
+    total=$((total + val))
+    if [ "$i" -eq "$j" ]; then
+      correct=$((correct + val))
+    fi
+  done
+done
+
+accuracy=$(echo "scale=4; $correct / $total" | bc)
+
+echo ""
+echo "Accuracy: $accuracy"

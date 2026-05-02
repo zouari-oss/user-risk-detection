@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+
+OUTPUT="../dataset/session_risk_dataset.csv"
+N=500000
+
+echo "session_duration,is_revoked,ip_change_count,device_change_count,location_change,login_hour,is_night_login,os_variation,risk_label" >"$OUTPUT"
+
+for ((i = 0; i < N; i++)); do
+
+  # ==========================
+  # UNIQUE FEATURE MAPPING (NO COLLISIONS)
+  # ==========================
+
+  session_duration=$((60 + (i % 10000)))
+
+  is_revoked=$(((i / 3) % 2))
+
+  ip_change_count=$(((i / 5) % 8))
+  device_change_count=$(((i / 11) % 8))
+
+  location_change=$(((i / 17) % 2))
+
+  login_hour=$(((i / 23) % 24))
+
+  is_night_login=0
+  ((login_hour < 6 || login_hour > 22)) && is_night_login=1
+
+  os_variation=$(((i / 29) % 6 + 1))
+
+  # ==========================
+  # REALISTIC RISK MODEL
+  # ==========================
+
+  risk_score=0
+
+  ((risk_score += is_revoked * 6))
+  ((risk_score += ip_change_count * 2))
+  ((risk_score += device_change_count * 2))
+  ((risk_score += location_change * 3))
+  ((risk_score += is_night_login * 2))
+  ((risk_score += os_variation / 2))
+
+  ((ip_change_count >= 5 && device_change_count >= 5)) && ((risk_score += 4))
+  ((location_change == 1 && is_night_login == 1)) && ((risk_score += 3))
+  ((is_revoked == 1 && ip_change_count >= 4)) && ((risk_score += 3))
+  ((session_duration < 120)) && ((risk_score += 2))
+
+  # tiny deterministic noise
+  risk_score=$((risk_score + (i % 4)))
+
+  # ==========================
+  # LABELING
+  # ==========================
+
+  if ((risk_score >= 32)); then
+    risk_label=2
+  elif ((risk_score >= 22)); then
+    risk_label=1
+  else
+    risk_label=0
+  fi
+
+  # ==========================
+  # LABEL NOISE (REALISM)
+  # ==========================
+  if (((i % 200) == 0)); then
+    risk_label=$(((risk_label + 1) % 3))
+  fi
+
+  echo "$session_duration,$is_revoked,$ip_change_count,$device_change_count,$location_change,$login_hour,$is_night_login,$os_variation,$risk_label" >>"$OUTPUT"
+
+done
+
+echo "Dataset generated: $OUTPUT"
+
+echo "Duplicates: $(tail -n +2 "$OUTPUT" | sort | uniq -d | wc -l)"
+echo "Safe rows (0): $(grep -c ',0$' "$OUTPUT")"
+echo "Medium rows (1): $(grep -c ',1$' "$OUTPUT")"
+echo "Risky rows (2): $(grep -c ',2$' "$OUTPUT")"

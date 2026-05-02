@@ -1,0 +1,11 @@
+# === Training pkgs ===
+# xgboost
+# scikit-learn
+pandas
+# matplotlib
+# graphviz
+# seaborn
+
+# === Api pkgs ===
+fastapi[standard]
+joblib
