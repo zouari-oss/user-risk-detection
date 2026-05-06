@@ -1,0 +1,3 @@
+[submodule "user-risk-detection-api"]
+	path = ../user-risk-detection-api
+	url = https://github.com/zouari-oss/user-risk-detection-api
