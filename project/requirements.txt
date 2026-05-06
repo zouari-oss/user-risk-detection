@@ -6,6 +6,8 @@ matplotlib
 graphviz
 seaborn
 joblib
+skl2onnx
+onnxmltools
 
 # === Api pkgs ===
 fastapi[standard]

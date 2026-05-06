@@ -1,0 +1,10 @@
+[
+  "session_duration",
+  "is_revoked",
+  "ip_change_count",
+  "device_change_count",
+  "location_change",
+  "login_hour",
+  "is_night_login",
+  "os_variation"
+]

@@ -29,12 +29,11 @@ from xgboost import XGBClassifier
 class RiskModel:
     def __init__(
         self: Self,
-        model_path: Path = Path(__file__).resolve().parent / "risk_model.pkl",
+        model_path: Path = Path(__file__).resolve().parent / "model/risk_model.pkl",
     ) -> None:
         self.model_path = model_path
         self.target_label = "risk_label"
         self.feature_names = None
-
         self.threshold = 0.5
 
         self.model = XGBClassifier(

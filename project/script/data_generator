@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-OUTPUT="../dataset/session_risk_dataset.csv"
+BASE_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+OUTPUT="$BASE_PATH/dataset/session_risk_dataset.csv"
 N=500000
 
 echo "session_duration,is_revoked,ip_change_count,device_change_count,location_change,login_hour,is_night_login,os_variation,risk_label" >"$OUTPUT"
